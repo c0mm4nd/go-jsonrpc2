@@ -11,11 +11,11 @@ func NewJsonRpcMessageBatch(messages ...*JsonRpcMessage) JsonRpcMessageBatch {
 	return messages
 }
 
-func (b *JsonRpcMessageBatch) Marshal()  ([]byte, error) {
+func (b *JsonRpcMessageBatch) Marshal() ([]byte, error) {
 	return json.Marshal(b)
 }
 
-func (b *JsonRpcMessageBatch)  Unmarshal(raw []byte) (*JsonRpcMessageBatch, error) {
+func (b *JsonRpcMessageBatch) Unmarshal(raw []byte) (*JsonRpcMessageBatch, error) {
 	err := json.Unmarshal(raw, b)
 	if err != nil {
 		return nil, err
@@ -24,11 +24,11 @@ func (b *JsonRpcMessageBatch)  Unmarshal(raw []byte) (*JsonRpcMessageBatch, erro
 	return b, nil
 }
 
-func MarshalBatchMessage(m *JsonRpcMessage) ([]byte, error)   {
+func MarshalMessageBatch(m *JsonRpcMessage) ([]byte, error) {
 	return json.Marshal(m)
 }
 
-func UnmarshalBatchMessage(raw []byte) (JsonRpcMessageBatch, error) {
+func UnmarshalMessageBatch(raw []byte) (JsonRpcMessageBatch, error) {
 	var m JsonRpcMessageBatch
 	err := json.Unmarshal(raw, &m)
 	if err != nil {

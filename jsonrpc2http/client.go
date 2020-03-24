@@ -1,4 +1,4 @@
-package http
+package jsonrpc2http
 
 import (
 	"bytes"

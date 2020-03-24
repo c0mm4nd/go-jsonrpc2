@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/maoxs2/go-jsonrpc2"
-	"github.com/maoxs2/go-jsonrpc2/http"
+	"github.com/maoxs2/go-jsonrpc2/jsonrpc2http"
 	"time"
 )
 
@@ -16,7 +16,7 @@ func (h *MyJsonHandler) Handle(msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMe
 }
 
 func main() {
-	handler := http.NewHTTPHandler()
+	handler := jsonrpc2http.NewHTTPHandler()
 	handler.RegisterJsonRpcHandler("check", new(MyJsonHandler))
 	handler.RegisterJsonRpcHandleFunc("checkAgain",
 		func(msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
@@ -24,15 +24,15 @@ func main() {
 			return jsonrpc2.NewJsonRpcSuccess(msg.ID, result)
 		})
 
-	server := http.NewServer("127:0.0.1:8888", handler)
+	server := jsonrpc2http.NewServer("127:0.0.1:8888", handler)
 
 	go server.ListenAndServe()
 
-	client := http.NewClient()
+	client := jsonrpc2http.NewClient()
 	msg := jsonrpc2.NewJsonRpcRequest(1, "check", jsonrpc2.EmptyArrayBytes)
-	req, _ := http.NewClientRequest("127.0.0.1:8888", msg)
+	req, _ := jsonrpc2http.NewClientRequest("127.0.0.1:8888", msg)
 
-	du := time.Tick(10*time.Second)
+	du := time.Tick(10 * time.Second)
 	for {
 		select {
 		case <-du:

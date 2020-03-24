@@ -1,4 +1,4 @@
-package http
+package jsonrpc2http
 
 import "net/http"
 
@@ -9,8 +9,8 @@ type Server struct {
 func NewServer(addr string, handler *Handler) *Server {
 	return &Server{
 		Server: http.Server{
-			Addr:              addr,
-			Handler:           handler,
+			Addr:    addr,
+			Handler: handler,
 		},
 	}
 }
