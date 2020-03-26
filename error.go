@@ -10,9 +10,9 @@ type Error struct {
 
 // some built-in errors
 var (
-	ErrParseFailed = errors.New("parse error")
-	ErrInternalError = errors.New("invalid params")
-	ErrInvalidParams = errors.New("invalid params")
+	ErrParseFailed    = errors.New("parse error")
+	ErrInternalError  = errors.New("invalid params")
+	ErrInvalidParams  = errors.New("invalid params")
 	ErrMethodNotFound = errors.New("method not found")
 	ErrInvalidRequest = errors.New("invalid request")
 )
@@ -37,9 +37,9 @@ func NewError(code int, err error, moreDataParams ...interface{}) *Error {
 
 func newError(code int, msg string, data ...interface{}) *Error {
 	var errData interface{}
-	if len(data) == 0 {
+	if len(data) == 1 {
 		errData = data[0]
-	}else{
+	} else {
 		errData = data
 	}
 
