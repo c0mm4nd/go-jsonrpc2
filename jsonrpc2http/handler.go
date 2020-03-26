@@ -7,24 +7,27 @@ import (
 	"net/http"
 )
 
-type Handler struct {
+// HTTPHandler is acting as a http.Handler and will redirect the jsonrpc message to one of the registered jsonrpc handlers on its handler table
+type HTTPHandler struct {
 	handlerMap map[string]JsonRpcHandler
 }
 
-func NewHTTPHandler() *Handler {
-	return &Handler{handlerMap: map[string]JsonRpcHandler{}}
+func NewHTTPHandler() *HTTPHandler {
+	return &HTTPHandler{
+		handlerMap: map[string]JsonRpcHandler{},
+	}
 }
 
-func (h *Handler) RegisterJsonRpcHandleFunc(method string, fn func(*jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage) {
+func (h *HTTPHandler) RegisterJsonRpcHandleFunc(method string, fn func(*jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage) {
 	handler := jsonRpcHandlerFunc(fn)
 	h.handlerMap[method] = handler
 }
 
-func (h *Handler) RegisterJsonRpcHandler(method string, handler JsonRpcHandler) {
+func (h *HTTPHandler) RegisterJsonRpcHandler(method string, handler JsonRpcHandler) {
 	h.handlerMap[method] = handler
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	raw, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		log.Println(err)
@@ -39,7 +42,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (h *Handler) onSingleMsg(w http.ResponseWriter, raw []byte) {
+func (h *HTTPHandler) onSingleMsg(w http.ResponseWriter, raw []byte) {
 	var res = &jsonrpc2.JsonRpcMessage{}
 	jsonRpcReq, err := jsonrpc2.UnmarshalMessage(raw)
 	if err != nil {
@@ -62,7 +65,7 @@ func (h *Handler) onSingleMsg(w http.ResponseWriter, raw []byte) {
 	w.Write(b)
 }
 
-func (h *Handler) onBatchMsg(w http.ResponseWriter, raw []byte) {
+func (h *HTTPHandler) onBatchMsg(w http.ResponseWriter, raw []byte) {
 	var res = jsonrpc2.JsonRpcMessageBatch{}
 	jsonRpcReqBatch, err := jsonrpc2.UnmarshalMessageBatch(raw)
 	if err != nil {
@@ -86,7 +89,7 @@ func (h *Handler) onBatchMsg(w http.ResponseWriter, raw []byte) {
 	w.Write(b)
 }
 
-func (h *Handler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
+func (h *HTTPHandler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
 	handler, exists := h.handlerMap[req.Method]
 	if !exists {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrMethodNotFound)
@@ -102,7 +105,7 @@ func (h *Handler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.Jso
 	}
 }
 
-func (h *Handler) serveBatchMessage(reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
+func (h *HTTPHandler) serveBatchMessage(reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
 	var resBatch = make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
 	for i := 0; i < len(reqBatch); i++ {
 		handler, exists := h.handlerMap[reqBatch[i].Method]
