@@ -1,10 +1,11 @@
 package jsonrpc2http
 
 import (
-	"github.com/maoxs2/go-jsonrpc2"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/maoxs2/go-jsonrpc2"
 )
 
 // HTTPHandler is acting as a http.Handler and will redirect the jsonrpc message to one of the registered jsonrpc handlers on its handler table
@@ -31,7 +32,6 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	raw, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		log.Println(err)
-		w.WriteHeader(500)
 		return
 	}
 
@@ -44,30 +44,25 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (h *HTTPHandler) onSingleMsg(w http.ResponseWriter, raw []byte) {
 	var res = &jsonrpc2.JsonRpcMessage{}
-	jsonRpcReq, err := jsonrpc2.UnmarshalMessage(raw)
+	jsonRPCReq, err := jsonrpc2.UnmarshalMessage(raw)
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		res = jsonrpc2.NewJsonRpcError(nil, errParams)
 	}
-	res = h.serveSingleMessage(jsonRpcReq)
+	res = h.serveSingleMessage(jsonRPCReq)
 
 	b, err := res.Marshal()
 	if err != nil {
 		log.Println(err)
 	}
 
-	if res.GetType() == jsonrpc2.TypeErrorMsg {
-		w.WriteHeader(400)
-	} else {
-		w.WriteHeader(200)
-	}
-
+	w.WriteHeader(200)
 	w.Write(b)
 }
 
 func (h *HTTPHandler) onBatchMsg(w http.ResponseWriter, raw []byte) {
 	var res = jsonrpc2.JsonRpcMessageBatch{}
-	jsonRpcReqBatch, err := jsonrpc2.UnmarshalMessageBatch(raw)
+	jsonRPCReqBatch, err := jsonrpc2.UnmarshalMessageBatch(raw)
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		e := jsonrpc2.NewJsonRpcError(nil, errParams)
@@ -75,10 +70,10 @@ func (h *HTTPHandler) onBatchMsg(w http.ResponseWriter, raw []byte) {
 		if err != nil {
 			log.Println(err)
 		}
-		w.WriteHeader(400)
+
 		w.Write(b)
 	}
-	res = h.serveBatchMessage(jsonRpcReqBatch)
+	res = h.serveBatchMessage(jsonRPCReqBatch)
 
 	b, err := res.Marshal()
 	if err != nil {
@@ -100,9 +95,9 @@ func (h *HTTPHandler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2
 	if res == nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrInternalError)
 		return jsonrpc2.NewJsonRpcError(nil, errParams)
-	} else {
-		return res
 	}
+
+	return res
 }
 
 func (h *HTTPHandler) serveBatchMessage(reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
