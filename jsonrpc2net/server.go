@@ -2,29 +2,50 @@ package jsonrpc2net
 
 import (
 	"bufio"
-	"log"
+	"go.uber.org/zap"
 	"net"
 	"strings"
 
 	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
+var prod, _ = zap.NewProduction()
+var sugar = prod.Sugar()
+
+type Logger interface {
+	Debug(...interface{})
+	Error(...interface{})
+}
+
 type Server struct {
 	net      string
 	listener net.Listener
+	logger   Logger
 
 	handlerMap map[string]JsonRpcHandler
 }
 
-func NewServer(network string, addr string) (*Server, error) {
-	listener, err := net.Listen(network, addr)
+type ServerConfig struct {
+	Network string
+	Addr    string
+	Logger  Logger
+}
+
+func NewServer(config ServerConfig) (*Server, error) {
+	var logger = config.Logger
+	if logger == nil {
+		logger = sugar
+	}
+
+	listener, err := net.Listen(config.Network, config.Addr)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Server{
-		net:      network,
+		net:      config.Network,
 		listener: listener,
+		logger:   logger,
 	}, nil
 }
 
@@ -61,7 +82,7 @@ func (s *Server) serveTCP() {
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			log.Println(err)
+			s.logger.Error(err)
 			continue
 		}
 
@@ -74,7 +95,7 @@ func (s *Server) handleTCPConn(conn *net.TCPConn) {
 	for {
 		raw, err := r.ReadBytes('\n')
 		if err != nil {
-			log.Println(err)
+			s.logger.Error(err)
 			continue
 		}
 

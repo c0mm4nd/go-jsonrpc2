@@ -1,5 +1,7 @@
 package jsonrpc2
 
+import "encoding/json"
+
 type JsonRpcMessageBatch []*JsonRpcMessage
 
 // IsBatchMarshal is a helper to check whether the rawbytes are from a jsonrpc message batch

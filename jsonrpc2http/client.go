@@ -2,6 +2,7 @@ package jsonrpc2http
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 
 	"github.com/c0mm4nd/go-jsonrpc2"
@@ -12,7 +13,7 @@ type Client struct {
 }
 
 func NewClientRequest(url string, message *jsonrpc2.JsonRpcMessage) (*http.Request, error) {
-	raw, err := message.MarshalJSON()
+	raw, err := json.Marshal(message)
 	if err != nil {
 		return nil, err
 	}

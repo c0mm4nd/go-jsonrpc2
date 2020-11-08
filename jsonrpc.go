@@ -1,6 +1,8 @@
 package jsonrpc2
 
-import jsoniter "github.com/json-iterator/go"
+import (
+	"encoding/json"
+)
 
 const jsonRpcVersion = "2.0"
 
@@ -19,9 +21,9 @@ type JsonRpcMessage struct {
 
 	Method string `json:"method,omitempty"`
 
-	Params *jsoniter.RawMessage `json:"params,omitempty"`
-	Result *jsoniter.RawMessage `json:"result,omitempty"`
-	Error  *Error               `json:"error,omitempty"`
+	Params *json.RawMessage `json:"params,omitempty"`
+	Result *json.RawMessage `json:"result,omitempty"`
+	Error  *Error           `json:"error,omitempty"`
 
 	ID interface{} `json:"id,omitempty"`
 }
@@ -46,14 +48,6 @@ func (m *JsonRpcMessage) GetType() MsgType {
 			return TypeInvalidMsg
 		}
 	}
-}
-
-func (m *JsonRpcMessage) MarshalJSON() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-func (m *JsonRpcMessage) UnmarshalJSON(raw []byte) error {
-	return json.Unmarshal(raw, m)
 }
 
 func UnmarshalMessage(raw []byte) (*JsonRpcMessage, error) {

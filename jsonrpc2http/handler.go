@@ -1,21 +1,43 @@
 package jsonrpc2http
 
 import (
+	"encoding/json"
+	"go.uber.org/zap"
 	"io/ioutil"
-	"log"
+
 	"net/http"
 
 	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
+var prod, _ = zap.NewProduction()
+var sugar = prod.Sugar()
+
 // HTTPHandler is acting as a http.Handler and will redirect the jsonrpc message to one of the registered jsonrpc handlers on its handler table
 type HTTPHandler struct {
+	logger     Logger
 	handlerMap map[string]JsonRpcHandler
 }
 
-func NewHTTPHandler() *HTTPHandler {
+type HandlerConfig struct {
+	Logger     Logger
+	HandlerMap map[string]JsonRpcHandler
+}
+
+func NewHTTPHandler(config HandlerConfig) *HTTPHandler {
+	var logger = config.Logger
+	if logger == nil {
+		logger = sugar
+	}
+
+	var handlerMap map[string]JsonRpcHandler
+	if config.HandlerMap == nil {
+		handlerMap = make(map[string]JsonRpcHandler)
+	}
+
 	return &HTTPHandler{
-		handlerMap: map[string]JsonRpcHandler{},
+		logger:     logger,
+		handlerMap: handlerMap,
 	}
 }
 
@@ -31,7 +53,7 @@ func (h *HTTPHandler) RegisterJsonRpcHandler(method string, handler JsonRpcHandl
 func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	raw, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		log.Println(err)
+		h.logger.Error(err)
 		return
 	}
 
@@ -51,13 +73,19 @@ func (h *HTTPHandler) onSingleMsg(w http.ResponseWriter, raw []byte) {
 	}
 	res = h.serveSingleMessage(jsonRPCReq)
 
-	b, err := res.MarshalJSON()
+	b, err := json.Marshal(res)
 	if err != nil {
-		log.Println(err)
+		h.logger.Error(err)
+		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrInternalError, err)
+		res = jsonrpc2.NewJsonRpcError(nil, errParams)
 	}
 
 	w.WriteHeader(200)
-	w.Write(b)
+	_, err = w.Write(b)
+	if err != nil {
+		h.logger.Error(err)
+	}
+
 }
 
 func (h *HTTPHandler) onBatchMsg(w http.ResponseWriter, raw []byte) {
@@ -66,22 +94,28 @@ func (h *HTTPHandler) onBatchMsg(w http.ResponseWriter, raw []byte) {
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		e := jsonrpc2.NewJsonRpcError(nil, errParams)
-		b, err := e.MarshalJSON()
+		b, err := json.Marshal(e)
 		if err != nil {
-			log.Println(err)
+			h.logger.Error(err)
 		}
 
-		w.Write(b)
+		_, err = w.Write(b)
+		if err != nil {
+			h.logger.Error(err)
+		}
 	}
 	res = h.serveBatchMessage(jsonRPCReqBatch)
 
 	b, err := res.Marshal()
 	if err != nil {
-		log.Println(err)
+		h.logger.Error(err)
 	}
 
 	w.WriteHeader(200)
-	w.Write(b)
+	_, err = w.Write(b)
+	if err != nil {
+		h.logger.Error(err)
+	}
 }
 
 func (h *HTTPHandler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {

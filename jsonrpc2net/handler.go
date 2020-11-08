@@ -1,10 +1,9 @@
 package jsonrpc2net
 
 import (
-	"io"
-	"log"
-
+	"encoding/json"
 	"github.com/c0mm4nd/go-jsonrpc2"
+	"io"
 )
 
 type JsonRpcHandler interface {
@@ -32,9 +31,9 @@ func (s *Server) onBatchMsg(w io.Writer, raw []byte) {
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		e := jsonrpc2.NewJsonRpcError(nil, errParams)
-		b, err := e.MarshalJSON()
+		b, err := json.Marshal(e)
 		if err != nil {
-			log.Println(err)
+			s.logger.Error(err)
 		}
 		w.Write(b)
 	}
@@ -42,7 +41,7 @@ func (s *Server) onBatchMsg(w io.Writer, raw []byte) {
 
 	b, err := res.Marshal()
 	if err != nil {
-		log.Println(err)
+		s.logger.Error(err)
 	}
 
 	w.Write(b)
@@ -57,9 +56,9 @@ func (s *Server) onSingleMsg(w io.Writer, raw []byte) {
 	}
 	res = s.serveSingleMessage(jsonRpcReq)
 
-	b, err := res.MarshalJSON()
+	b, err := json.Marshal(res)
 	if err != nil {
-		log.Println(err)
+		s.logger.Error(err)
 	}
 
 	w.Write(b)

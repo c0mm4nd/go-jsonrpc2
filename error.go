@@ -37,9 +37,12 @@ func NewError(code int, err error, moreDataParams ...interface{}) *Error {
 
 func newError(code int, msg string, data ...interface{}) *Error {
 	var errData interface{}
-	if len(data) == 1 {
+	switch len(data) {
+	case 0:
+		errData = nil
+	case 1:
 		errData = data[0]
-	} else {
+	default:
 		errData = data
 	}
 
