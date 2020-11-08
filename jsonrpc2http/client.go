@@ -12,7 +12,7 @@ type Client struct {
 }
 
 func NewClientRequest(url string, message *jsonrpc2.JsonRpcMessage) (*http.Request, error) {
-	raw, err := message.Marshal()
+	raw, err := message.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}

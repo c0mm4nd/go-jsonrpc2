@@ -51,7 +51,7 @@ func (h *HTTPHandler) onSingleMsg(w http.ResponseWriter, raw []byte) {
 	}
 	res = h.serveSingleMessage(jsonRPCReq)
 
-	b, err := res.Marshal()
+	b, err := res.MarshalJSON()
 	if err != nil {
 		log.Println(err)
 	}
@@ -66,7 +66,7 @@ func (h *HTTPHandler) onBatchMsg(w http.ResponseWriter, raw []byte) {
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		e := jsonrpc2.NewJsonRpcError(nil, errParams)
-		b, err := e.Marshal()
+		b, err := e.MarshalJSON()
 		if err != nil {
 			log.Println(err)
 		}

@@ -1,11 +1,15 @@
 package jsonrpc2
 
+import jsoniter "github.com/json-iterator/go"
+
 // NewJsonRpcRequest returns a JSON-RPC 2.0 request message structures. id must be string/int/nil type. params should be json marshaled
 func NewJsonRpcRequest(id interface{}, method string, params []byte) *JsonRpcMessage {
+	paramsField := jsoniter.RawMessage(params)
+
 	p := &JsonRpcMessage{
 		Version: jsonRpcVersion,
 		Method:  method,
-		Params:  params,
+		Params:  &paramsField,
 		ID:      id,
 	}
 
@@ -19,9 +23,11 @@ func NewJsonRpcNotification(method string, params []byte) *JsonRpcMessage {
 
 // NewJsonRpcSuccess returns a JSON-RPC 2.0 success message structures. result should be json marshaled
 func NewJsonRpcSuccess(id interface{}, result []byte) *JsonRpcMessage {
+	resultField := jsoniter.RawMessage(result)
+
 	p := &JsonRpcMessage{
 		Version: jsonRpcVersion,
-		Result:  result,
+		Result:  &resultField,
 		ID:      id,
 	}
 

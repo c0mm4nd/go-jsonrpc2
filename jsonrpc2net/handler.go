@@ -32,7 +32,7 @@ func (s *Server) onBatchMsg(w io.Writer, raw []byte) {
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		e := jsonrpc2.NewJsonRpcError(nil, errParams)
-		b, err := e.Marshal()
+		b, err := e.MarshalJSON()
 		if err != nil {
 			log.Println(err)
 		}
@@ -57,7 +57,7 @@ func (s *Server) onSingleMsg(w io.Writer, raw []byte) {
 	}
 	res = s.serveSingleMessage(jsonRpcReq)
 
-	b, err := res.Marshal()
+	b, err := res.MarshalJSON()
 	if err != nil {
 		log.Println(err)
 	}
