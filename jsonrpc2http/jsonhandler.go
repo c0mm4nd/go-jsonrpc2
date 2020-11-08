@@ -1,6 +1,6 @@
 package jsonrpc2http
 
-import "github.com/maoxs2/go-jsonrpc2"
+import "github.com/c0mm4nd/go-jsonrpc2"
 
 type JsonRpcHandler interface {
 	Handle(*jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage

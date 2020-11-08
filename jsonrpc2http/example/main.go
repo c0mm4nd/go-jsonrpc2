@@ -2,9 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/maoxs2/go-jsonrpc2"
-	"github.com/maoxs2/go-jsonrpc2/jsonrpc2http"
 	"time"
+
+	"github.com/c0mm4nd/go-jsonrpc2"
+	"github.com/c0mm4nd/go-jsonrpc2/jsonrpc2http"
 )
 
 type MyJsonHandler struct {

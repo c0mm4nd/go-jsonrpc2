@@ -2,8 +2,9 @@ package jsonrpc2http
 
 import (
 	"bytes"
-	"github.com/maoxs2/go-jsonrpc2"
 	"net/http"
+
+	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
 type Client struct {

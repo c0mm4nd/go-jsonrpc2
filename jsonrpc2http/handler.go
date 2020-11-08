@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/maoxs2/go-jsonrpc2"
+	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
 // HTTPHandler is acting as a http.Handler and will redirect the jsonrpc message to one of the registered jsonrpc handlers on its handler table

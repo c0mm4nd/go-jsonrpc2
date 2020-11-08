@@ -14,14 +14,18 @@ const (
 	TypeSuccessMsg
 )
 
+type Message interface {
+	Marshal() ([]byte, error)
+}
+
 type JsonRpcMessage struct {
-	Version string  `json:"jsonrpc"`
+	Version string `json:"jsonrpc"`
 
 	Method string `json:"method,omitempty"`
 
 	Params jsoniter.RawMessage `json:"params,omitempty"`
 	Result jsoniter.RawMessage `json:"result,omitempty"`
-	Error  *Error      `json:"error,omitempty"`
+	Error  *Error              `json:"error,omitempty"`
 
 	ID interface{} `json:"id,omitempty"`
 }
@@ -61,7 +65,7 @@ func (m *JsonRpcMessage) Unmarshal(raw []byte) (*JsonRpcMessage, error) {
 	return m, nil
 }
 
-func MarshalMessage(m *JsonRpcMessage) ([]byte, error)   {
+func MarshalMessage(m *JsonRpcMessage) ([]byte, error) {
 	return json.Marshal(m)
 }
 

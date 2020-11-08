@@ -2,10 +2,11 @@ package jsonrpc2net
 
 import (
 	"bufio"
-	"github.com/maoxs2/go-jsonrpc2"
 	"log"
 	"net"
 	"strings"
+
+	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
 type Server struct {

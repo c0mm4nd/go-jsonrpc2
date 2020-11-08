@@ -5,7 +5,7 @@ func NewJsonRpcRequest(id interface{}, method string, params []byte) *JsonRpcMes
 	p := &JsonRpcMessage{
 		Version: jsonRpcVersion,
 		Method:  method,
-		Params:params,
+		Params:  params,
 		ID:      id,
 	}
 
