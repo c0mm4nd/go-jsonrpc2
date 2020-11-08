@@ -2,16 +2,11 @@ package jsonrpc2http
 
 import (
 	"encoding/json"
-	"go.uber.org/zap"
 	"io/ioutil"
-
 	"net/http"
 
 	"github.com/c0mm4nd/go-jsonrpc2"
 )
-
-var prod, _ = zap.NewProduction()
-var sugar = prod.Sugar()
 
 // HTTPHandler is acting as a http.Handler and will redirect the jsonrpc message to one of the registered jsonrpc handlers on its handler table
 type HTTPHandler struct {
@@ -27,7 +22,7 @@ type HandlerConfig struct {
 func NewHTTPHandler(config HandlerConfig) *HTTPHandler {
 	var logger = config.Logger
 	if logger == nil {
-		logger = sugar
+		logger = new(SimpleLogger)
 	}
 
 	var handlerMap map[string]JsonRpcHandler

@@ -2,15 +2,11 @@ package jsonrpc2net
 
 import (
 	"bufio"
-	"go.uber.org/zap"
 	"net"
 	"strings"
 
 	"github.com/c0mm4nd/go-jsonrpc2"
 )
-
-var prod, _ = zap.NewProduction()
-var sugar = prod.Sugar()
 
 type Logger interface {
 	Debug(...interface{})
@@ -34,7 +30,7 @@ type ServerConfig struct {
 func NewServer(config ServerConfig) (*Server, error) {
 	var logger = config.Logger
 	if logger == nil {
-		logger = sugar
+		logger = new(SimpleLogger)
 	}
 
 	listener, err := net.Listen(config.Network, config.Addr)
