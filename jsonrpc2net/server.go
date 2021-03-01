@@ -8,11 +8,6 @@ import (
 	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
-type Logger interface {
-	Debug(...interface{})
-	Error(...interface{})
-}
-
 type Server struct {
 	net      string
 	listener net.Listener

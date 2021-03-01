@@ -4,13 +4,8 @@ import (
 	"net/http"
 )
 
-type Logger interface {
-	Debug(...interface{})
-	Error(...interface{})
-}
-
 type Server struct {
-	http.Server
+	*http.Server
 	*HTTPHandler
 
 	logger Logger
@@ -23,19 +18,21 @@ type ServerConfig struct {
 }
 
 func NewServer(config ServerConfig) *Server {
-	var handler = config.Handler
+	if config.Logger == nil {
+		config.Logger = new(SimpleLogger)
+	}
 	if config.Handler == nil {
-		handler = NewHTTPHandler(HandlerConfig{
+		config.Handler = NewHTTPHandler(HandlerConfig{
 			Logger:     config.Logger,
 			HandlerMap: nil,
 		})
 	}
 
 	return &Server{
-		HTTPHandler: handler,
-		Server: http.Server{
+		HTTPHandler: config.Handler,
+		Server: &http.Server{
 			Addr:    config.Addr,
-			Handler: handler,
+			Handler: config.Handler,
 		},
 	}
 }

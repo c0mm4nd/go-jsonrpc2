@@ -2,8 +2,9 @@ package jsonrpc2net
 
 import (
 	"encoding/json"
-	"github.com/c0mm4nd/go-jsonrpc2"
 	"io"
+
+	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
 type JsonRpcHandler interface {
