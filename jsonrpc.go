@@ -1,15 +1,13 @@
 package jsonrpc2
 
-import (
-	"encoding/json"
-)
+import json "encoding/json"
 
 const jsonRpcVersion = "2.0"
 
-type MsgType int
+type JsonMsgType int
 
 const (
-	TypeInvalidMsg MsgType = iota
+	TypeInvalidMsg JsonMsgType = iota
 	TypeNotificationMsg
 	TypeRequestMsg
 	TypeErrorMsg
@@ -28,7 +26,7 @@ type JsonRpcMessage struct {
 	ID interface{} `json:"id,omitempty"`
 }
 
-func (m *JsonRpcMessage) GetType() MsgType {
+func (m *JsonRpcMessage) GetType() JsonMsgType {
 	if m.Version != jsonRpcVersion {
 		return TypeInvalidMsg
 	}
@@ -36,23 +34,22 @@ func (m *JsonRpcMessage) GetType() MsgType {
 	if m.Method != "" { //Request
 		if m.ID == nil {
 			return TypeNotificationMsg
-		} else {
-			return TypeRequestMsg
 		}
+
+		return TypeRequestMsg
 	} else {
 		if m.Error != nil { // Response
 			return TypeErrorMsg
 		} else if m.Result != nil {
 			return TypeSuccessMsg
-		} else {
-			return TypeInvalidMsg
 		}
+		return TypeInvalidMsg
 	}
 }
 
 func UnmarshalMessage(raw []byte) (*JsonRpcMessage, error) {
 	var m JsonRpcMessage
-	err := json.Unmarshal(raw, &m)
+	err := JSON.Unmarshal(raw, &m)
 	if err != nil {
 		return nil, err
 	}

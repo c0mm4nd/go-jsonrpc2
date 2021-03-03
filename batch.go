@@ -1,7 +1,5 @@
 package jsonrpc2
 
-import "encoding/json"
-
 type JsonRpcMessageBatch []*JsonRpcMessage
 
 // IsBatchMarshal is a helper to check whether the rawbytes are from a jsonrpc message batch
@@ -14,11 +12,11 @@ func NewJsonRpcMessageBatch(messages ...*JsonRpcMessage) JsonRpcMessageBatch {
 }
 
 func (b *JsonRpcMessageBatch) Marshal() ([]byte, error) {
-	return json.Marshal(b)
+	return JSON.Marshal(b)
 }
 
 func (b *JsonRpcMessageBatch) Unmarshal(raw []byte) (*JsonRpcMessageBatch, error) {
-	err := json.Unmarshal(raw, b)
+	err := JSON.Unmarshal(raw, b)
 	if err != nil {
 		return nil, err
 	}
@@ -27,12 +25,12 @@ func (b *JsonRpcMessageBatch) Unmarshal(raw []byte) (*JsonRpcMessageBatch, error
 }
 
 func MarshalMessageBatch(m *JsonRpcMessage) ([]byte, error) {
-	return json.Marshal(m)
+	return JSON.Marshal(m)
 }
 
 func UnmarshalMessageBatch(raw []byte) (JsonRpcMessageBatch, error) {
 	var m JsonRpcMessageBatch
-	err := json.Unmarshal(raw, &m)
+	err := JSON.Unmarshal(raw, &m)
 	if err != nil {
 		return nil, err
 	}

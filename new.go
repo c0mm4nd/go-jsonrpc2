@@ -1,8 +1,6 @@
 package jsonrpc2
 
-import (
-	"encoding/json"
-)
+import json "encoding/json"
 
 // NewJsonRpcRequest returns a JSON-RPC 2.0 request message structures. id must be string/int/nil type. params should be json marshaled
 func NewJsonRpcRequest(id interface{}, method string, params []byte) *JsonRpcMessage {
