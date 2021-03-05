@@ -16,7 +16,7 @@ type WSHandler struct {
 
 type HandlerConfig struct {
 	Logger     Logger
-	HandlerMap map[string]JsonRpcHandler
+	HandlerMap map[string]StatefulJsonRpcHandler
 }
 
 func NewWSHandler(config HandlerConfig) *WSHandler {
@@ -26,7 +26,7 @@ func NewWSHandler(config HandlerConfig) *WSHandler {
 	}
 
 	if config.HandlerMap == nil {
-		config.HandlerMap = make(map[string]JsonRpcHandler)
+		config.HandlerMap = make(map[string]StatefulJsonRpcHandler)
 	}
 
 	return &WSHandler{
@@ -35,12 +35,12 @@ func NewWSHandler(config HandlerConfig) *WSHandler {
 	}
 }
 
-func (h *WSHandler) RegisterJsonRpcHandleFunc(method string, fn func(*jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage) {
-	handler := jsonRpcHandlerFunc(fn)
+func (h *WSHandler) RegisterJsonRpcHandleFunc(method string, fn func(*websocket.Conn, *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage) {
+	handler := statefulJsonRpcHandlerFunc(fn)
 	h.HandlerMap[method] = handler
 }
 
-func (h *WSHandler) RegisterJsonRpcHandler(method string, handler JsonRpcHandler) {
+func (h *WSHandler) RegisterJsonRpcHandler(method string, handler StatefulJsonRpcHandler) {
 	h.HandlerMap[method] = handler
 }
 
@@ -51,7 +51,12 @@ func (h *WSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Error(err)
 		return
 	}
-	defer c.Close() // serve http like tcp
+	defer func() {
+		err := c.Close()
+		if err != nil {
+			h.Logger.Error(err)
+		}
+	}() // serve http like tcp
 
 	for {
 		msgType, rawMsg, err := c.ReadMessage()
@@ -85,7 +90,7 @@ func (h *WSHandler) onSingleMsg(c *websocket.Conn, msgType int, raw []byte) {
 			h.Logger.Error(err)
 		}
 	}
-	res = h.serveSingleMessage(jsonRPCReq)
+	res = h.serveSingleMessage(c, jsonRPCReq)
 
 	b, err := json.Marshal(res)
 	if err != nil {
@@ -100,7 +105,7 @@ func (h *WSHandler) onSingleMsg(c *websocket.Conn, msgType int, raw []byte) {
 	}
 }
 
-func (h *WSHandler) onBatchMsg(c *websocket.Conn, msgType int, raw []byte) {
+func (h *WSHandler) onBatchMsg(conn *websocket.Conn, msgType int, raw []byte) {
 	var res = jsonrpc2.JsonRpcMessageBatch{}
 	jsonRPCReqBatch, err := jsonrpc2.UnmarshalMessageBatch(raw)
 	if err != nil {
@@ -111,32 +116,32 @@ func (h *WSHandler) onBatchMsg(c *websocket.Conn, msgType int, raw []byte) {
 			h.Logger.Error(err)
 		}
 
-		err = c.WriteMessage(msgType, b)
+		err = conn.WriteMessage(msgType, b)
 		if err != nil {
 			h.Logger.Error(err)
 		}
 	}
-	res = h.serveBatchMessage(jsonRPCReqBatch)
+	res = h.serveBatchMessage(conn, jsonRPCReqBatch)
 
 	b, err := res.Marshal()
 	if err != nil {
 		h.Logger.Error(err)
 	}
 
-	err = c.WriteMessage(msgType, b)
+	err = conn.WriteMessage(msgType, b)
 	if err != nil {
 		h.Logger.Error(err)
 	}
 }
 
-func (h *WSHandler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
+func (h *WSHandler) serveSingleMessage(conn *websocket.Conn, req *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
 	handler, exists := h.HandlerMap[req.Method]
 	if !exists {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrMethodNotFound)
 		return jsonrpc2.NewJsonRpcError(nil, errParams)
 	}
 
-	res := handler.Handle(req)
+	res := handler.Handle(conn, req)
 	if res == nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrInternalError)
 		return jsonrpc2.NewJsonRpcError(nil, errParams)
@@ -145,7 +150,7 @@ func (h *WSHandler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.J
 	return res
 }
 
-func (h *WSHandler) serveBatchMessage(reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
+func (h *WSHandler) serveBatchMessage(conn *websocket.Conn, reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
 	var resBatch = make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
 	for i := 0; i < len(reqBatch); i++ {
 		handler, exists := h.HandlerMap[reqBatch[i].Method]
@@ -155,7 +160,7 @@ func (h *WSHandler) serveBatchMessage(reqBatch jsonrpc2.JsonRpcMessageBatch) jso
 			continue
 		}
 
-		res := handler.Handle(reqBatch[i])
+		res := handler.Handle(conn, reqBatch[i])
 		if res == nil {
 			errParams := jsonrpc2.NewError(0, jsonrpc2.ErrInternalError)
 			resBatch[i] = jsonrpc2.NewJsonRpcError(nil, errParams)

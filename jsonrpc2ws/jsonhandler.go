@@ -1,13 +1,16 @@
 package jsonrpc2ws
 
-import "github.com/c0mm4nd/go-jsonrpc2"
+import (
+	"github.com/c0mm4nd/go-jsonrpc2"
+	"github.com/gorilla/websocket"
+)
 
-type JsonRpcHandler interface {
-	Handle(*jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage
+type StatefulJsonRpcHandler interface {
+	Handle(*websocket.Conn, *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage
 }
 
-type jsonRpcHandlerFunc func(*jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage
+type statefulJsonRpcHandlerFunc func(*websocket.Conn, *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage
 
-func (fn jsonRpcHandlerFunc) Handle(msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
-	return fn(msg)
+func (fn statefulJsonRpcHandlerFunc) Handle(conn *websocket.Conn, msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
+	return fn(conn, msg)
 }

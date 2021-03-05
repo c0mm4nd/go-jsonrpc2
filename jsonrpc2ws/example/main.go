@@ -12,7 +12,7 @@ import (
 type MyJsonHandler struct {
 }
 
-func (h *MyJsonHandler) Handle(msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
+func (h *MyJsonHandler) Handle(_ *websocket.Conn, msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
 	//result, _ := json.Marshal(map[string]interface{}{"ok": true})
 	return jsonrpc2.NewJsonRpcSuccess(msg.ID, nil) // never use []byte{}
 }
@@ -23,7 +23,7 @@ func main() {
 	})
 
 	server.RegisterJsonRpcHandler("check", new(MyJsonHandler))
-	server.RegisterJsonRpcHandleFunc("checkAgain", func(msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
+	server.RegisterJsonRpcHandleFunc("checkAgain", func(_ *websocket.Conn, msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
 		//result, _ := json.Marshal(map[string]interface{}{"ok": true})
 		return jsonrpc2.NewJsonRpcSuccess(msg.ID, nil)
 	})
@@ -59,7 +59,33 @@ func main() {
 				panic(err)
 			}
 
-			log.Println("reply:", msg)
+			log.Printf("reply: %#v\n: %v", msg, msg.Error) // error
+
+			msg = jsonrpc2.NewJsonRpcRequest(1, "check", nil)
+			err = client.WriteMessage(msgType, msg)
+			if err != nil {
+				panic(err)
+			}
+
+			_, msg, err = client.ReadMessage()
+			if err != nil {
+				panic(err)
+			}
+
+			log.Printf("reply: %#v\n: %v", msg, msg.Error)
+
+			msg = jsonrpc2.NewJsonRpcRequest(1, "checkAgain", nil)
+			err = client.WriteMessage(msgType, msg)
+			if err != nil {
+				panic(err)
+			}
+
+			_, msg, err = client.ReadMessage()
+			if err != nil {
+				panic(err)
+			}
+
+			log.Printf("reply: %#v\n: %v", msg, msg.Error)
 		}
 	}
 }
