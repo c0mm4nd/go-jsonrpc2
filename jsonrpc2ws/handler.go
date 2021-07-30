@@ -20,9 +20,9 @@ type HandlerConfig struct {
 }
 
 func NewWSHandler(config HandlerConfig) *WSHandler {
-	var logger = config.Logger
+	logger := config.Logger
 	if logger == nil {
-		logger = new(SimpleLogger)
+		config.Logger = new(SimpleLogger)
 	}
 
 	if config.HandlerMap == nil {
@@ -71,11 +71,10 @@ func (h *WSHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.onSingleMsg(c, msgType, rawMsg)
 		}
 	}
-
 }
 
 func (h *WSHandler) onSingleMsg(c *websocket.Conn, msgType int, raw []byte) {
-	var res = &jsonrpc2.JsonRpcMessage{}
+	var res *jsonrpc2.JsonRpcMessage
 	jsonRPCReq, err := jsonrpc2.UnmarshalMessage(raw)
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
@@ -97,6 +96,10 @@ func (h *WSHandler) onSingleMsg(c *websocket.Conn, msgType int, raw []byte) {
 		h.Logger.Error(err)
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrInternalError, err)
 		res = jsonrpc2.NewJsonRpcError(nil, errParams)
+		b, err = json.Marshal(res)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	err = c.WriteMessage(msgType, b)
@@ -106,7 +109,7 @@ func (h *WSHandler) onSingleMsg(c *websocket.Conn, msgType int, raw []byte) {
 }
 
 func (h *WSHandler) onBatchMsg(conn *websocket.Conn, msgType int, raw []byte) {
-	var res = jsonrpc2.JsonRpcMessageBatch{}
+	res := jsonrpc2.JsonRpcMessageBatch{}
 	jsonRPCReqBatch, err := jsonrpc2.UnmarshalMessageBatch(raw)
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
@@ -151,7 +154,7 @@ func (h *WSHandler) serveSingleMessage(conn *websocket.Conn, req *jsonrpc2.JsonR
 }
 
 func (h *WSHandler) serveBatchMessage(conn *websocket.Conn, reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
-	var resBatch = make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
+	resBatch := make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
 	for i := 0; i < len(reqBatch); i++ {
 		handler, exists := h.HandlerMap[reqBatch[i].Method]
 		if !exists {

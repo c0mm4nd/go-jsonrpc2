@@ -7,8 +7,6 @@ import (
 type Server struct {
 	*http.Server
 	*HTTPHandler
-
-	logger Logger
 }
 
 type ServerConfig struct {

@@ -19,9 +19,8 @@ type HandlerConfig struct {
 }
 
 func NewHTTPHandler(config HandlerConfig) *HTTPHandler {
-	var logger = config.Logger
-	if logger == nil {
-		logger = new(SimpleLogger)
+	if config.Logger == nil {
+		config.Logger = new(SimpleLogger)
 	}
 
 	if config.HandlerMap == nil {
@@ -57,19 +56,26 @@ func (h *HTTPHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h *HTTPHandler) onSingleMsg(w http.ResponseWriter, raw []byte) {
-	var res = &jsonrpc2.JsonRpcMessage{}
+	var res *jsonrpc2.JsonRpcMessage
+
 	jsonRPCReq, err := jsonrpc2.UnmarshalMessage(raw)
 	if err != nil {
+		h.Logger.Error(err)
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		res = jsonrpc2.NewJsonRpcError(nil, errParams)
+	} else {
+		res = h.serveSingleMessage(jsonRPCReq)
 	}
-	res = h.serveSingleMessage(jsonRPCReq)
 
 	b, err := json.Marshal(res)
 	if err != nil {
 		h.Logger.Error(err)
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrInternalError, err)
 		res = jsonrpc2.NewJsonRpcError(nil, errParams)
+		b, err = json.Marshal(res)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	w.WriteHeader(200)
@@ -77,11 +83,10 @@ func (h *HTTPHandler) onSingleMsg(w http.ResponseWriter, raw []byte) {
 	if err != nil {
 		h.Logger.Error(err)
 	}
-
 }
 
 func (h *HTTPHandler) onBatchMsg(w http.ResponseWriter, raw []byte) {
-	var res = jsonrpc2.JsonRpcMessageBatch{}
+	res := jsonrpc2.JsonRpcMessageBatch{}
 	jsonRPCReqBatch, err := jsonrpc2.UnmarshalMessageBatch(raw)
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
@@ -127,7 +132,7 @@ func (h *HTTPHandler) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2
 }
 
 func (h *HTTPHandler) serveBatchMessage(reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
-	var resBatch = make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
+	resBatch := make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
 	for i := 0; i < len(reqBatch); i++ {
 		handler, exists := h.HandlerMap[reqBatch[i].Method]
 		if !exists {

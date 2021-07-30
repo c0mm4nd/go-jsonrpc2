@@ -27,7 +27,7 @@ func (s *Server) RegisterJsonRpcHandler(method string, handler JsonRpcHandler) {
 }
 
 func (s *Server) onBatchMsg(w io.Writer, raw []byte) {
-	var res = jsonrpc2.JsonRpcMessageBatch{}
+	res := jsonrpc2.JsonRpcMessageBatch{}
 	jsonRpcReqBatch, err := jsonrpc2.UnmarshalMessageBatch(raw)
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
@@ -36,7 +36,10 @@ func (s *Server) onBatchMsg(w io.Writer, raw []byte) {
 		if err != nil {
 			s.logger.Error(err)
 		}
-		w.Write(b)
+		_, err = w.Write(b)
+		if err != nil {
+			s.logger.Error(err)
+		}
 	}
 	res = s.serveBatchMessage(jsonRpcReqBatch)
 
@@ -45,24 +48,31 @@ func (s *Server) onBatchMsg(w io.Writer, raw []byte) {
 		s.logger.Error(err)
 	}
 
-	w.Write(b)
+	_, err = w.Write(b)
+	if err != nil {
+		s.logger.Error(err)
+	}
 }
 
 func (s *Server) onSingleMsg(w io.Writer, raw []byte) {
-	var res = &jsonrpc2.JsonRpcMessage{}
+	var res *jsonrpc2.JsonRpcMessage
 	jsonRpcReq, err := jsonrpc2.UnmarshalMessage(raw)
 	if err != nil {
 		errParams := jsonrpc2.NewError(0, jsonrpc2.ErrParseFailed, err)
 		res = jsonrpc2.NewJsonRpcError(nil, errParams)
+	} else {
+		res = s.serveSingleMessage(jsonRpcReq)
 	}
-	res = s.serveSingleMessage(jsonRpcReq)
 
 	b, err := json.Marshal(res)
 	if err != nil {
 		s.logger.Error(err)
 	}
 
-	w.Write(b)
+	_, err = w.Write(b)
+	if err != nil {
+		s.logger.Error(err)
+	}
 }
 
 func (s *Server) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
@@ -82,7 +92,7 @@ func (s *Server) serveSingleMessage(req *jsonrpc2.JsonRpcMessage) *jsonrpc2.Json
 }
 
 func (s *Server) serveBatchMessage(reqBatch jsonrpc2.JsonRpcMessageBatch) jsonrpc2.JsonRpcMessageBatch {
-	var resBatch = make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
+	resBatch := make(jsonrpc2.JsonRpcMessageBatch, len(reqBatch))
 	for i := 0; i < len(reqBatch); i++ {
 		handler, exists := s.handlerMap[reqBatch[i].Method]
 		if !exists {

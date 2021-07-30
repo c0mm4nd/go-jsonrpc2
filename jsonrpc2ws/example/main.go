@@ -1,19 +1,19 @@
 package main
 
 import (
-	"github.com/c0mm4nd/go-jsonrpc2/jsonrpc2ws"
-	"github.com/gorilla/websocket"
 	"log"
 	"time"
+
+	"github.com/c0mm4nd/go-jsonrpc2/jsonrpc2ws"
+	"github.com/gorilla/websocket"
 
 	"github.com/c0mm4nd/go-jsonrpc2"
 )
 
-type MyJsonHandler struct {
-}
+type MyJsonHandler struct{}
 
 func (h *MyJsonHandler) Handle(_ *websocket.Conn, msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
-	//result, _ := json.Marshal(map[string]interface{}{"ok": true})
+	// result, _ := json.Marshal(map[string]interface{}{"ok": true})
 	return jsonrpc2.NewJsonRpcSuccess(msg.ID, nil) // never use []byte{}
 }
 
@@ -24,7 +24,7 @@ func main() {
 
 	server.RegisterJsonRpcHandler("check", new(MyJsonHandler))
 	server.RegisterJsonRpcHandleFunc("checkAgain", func(_ *websocket.Conn, msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
-		//result, _ := json.Marshal(map[string]interface{}{"ok": true})
+		// result, _ := json.Marshal(map[string]interface{}{"ok": true})
 		return jsonrpc2.NewJsonRpcSuccess(msg.ID, nil)
 	})
 
@@ -44,48 +44,47 @@ func main() {
 
 	du := time.Tick(10 * time.Second)
 	for {
-		select {
-		case <-du:
-			msgType := websocket.TextMessage
+		<-du
+		msgType := websocket.TextMessage
 
-			msg := jsonrpc2.NewJsonRpcRequest(1, "hello", nil)
-			err := client.WriteMessage(msgType, msg)
-			if err != nil {
-				panic(err)
-			}
-
-			_, msg, err = client.ReadMessage()
-			if err != nil {
-				panic(err)
-			}
-
-			log.Printf("reply: %#v\n: %v", msg, msg.Error) // error
-
-			msg = jsonrpc2.NewJsonRpcRequest(1, "check", nil)
-			err = client.WriteMessage(msgType, msg)
-			if err != nil {
-				panic(err)
-			}
-
-			_, msg, err = client.ReadMessage()
-			if err != nil {
-				panic(err)
-			}
-
-			log.Printf("reply: %#v\n: %v", msg, msg.Error)
-
-			msg = jsonrpc2.NewJsonRpcRequest(1, "checkAgain", nil)
-			err = client.WriteMessage(msgType, msg)
-			if err != nil {
-				panic(err)
-			}
-
-			_, msg, err = client.ReadMessage()
-			if err != nil {
-				panic(err)
-			}
-
-			log.Printf("reply: %#v\n: %v", msg, msg.Error)
+		msg := jsonrpc2.NewJsonRpcRequest(1, "hello", nil)
+		err := client.WriteMessage(msgType, msg)
+		if err != nil {
+			panic(err)
 		}
+
+		_, msg, err = client.ReadMessage()
+		if err != nil {
+			panic(err)
+		}
+
+		log.Printf("reply: %#v\n: %v", msg, msg.Error) // error
+
+		msg = jsonrpc2.NewJsonRpcRequest(1, "check", nil)
+		err = client.WriteMessage(msgType, msg)
+		if err != nil {
+			panic(err)
+		}
+
+		_, msg, err = client.ReadMessage()
+		if err != nil {
+			panic(err)
+		}
+
+		log.Printf("reply: %#v\n: %v", msg, msg.Error)
+
+		msg = jsonrpc2.NewJsonRpcRequest(1, "checkAgain", nil)
+		err = client.WriteMessage(msgType, msg)
+		if err != nil {
+			panic(err)
+		}
+
+		_, msg, err = client.ReadMessage()
+		if err != nil {
+			panic(err)
+		}
+
+		log.Printf("reply: %#v\n: %v", msg, msg.Error)
+
 	}
 }

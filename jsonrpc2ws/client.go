@@ -37,6 +37,10 @@ func (c *Client) ReadRawMessage() (messageType int, message []byte, err error) {
 
 func (c *Client) ReadMessage() (messageType int, message *jsonrpc2.JsonRpcMessage, err error) {
 	messageType, rawMsg, err := c.Conn.ReadMessage()
+	if err != nil {
+		return
+	}
+
 	var msg jsonrpc2.JsonRpcMessage
 	err = json.Unmarshal(rawMsg, &msg)
 	if err != nil {
@@ -48,6 +52,10 @@ func (c *Client) ReadMessage() (messageType int, message *jsonrpc2.JsonRpcMessag
 
 func (c *Client) ReadMessageBatch() (messageType int, message *jsonrpc2.JsonRpcMessageBatch, err error) {
 	messageType, rawMsgBatch, err := c.Conn.ReadMessage()
+	if err != nil {
+		return
+	}
+
 	var msgBatch jsonrpc2.JsonRpcMessageBatch
 	err = json.Unmarshal(rawMsgBatch, &msgBatch)
 	if err != nil {

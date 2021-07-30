@@ -9,11 +9,10 @@ import (
 	"github.com/c0mm4nd/go-jsonrpc2/jsonrpc2http"
 )
 
-type MyJsonHandler struct {
-}
+type MyJsonHandler struct{}
 
 func (h *MyJsonHandler) Handle(msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
-	//result, _ := json.Marshal(map[string]interface{}{"ok": true})
+	// result, _ := json.Marshal(map[string]interface{}{"ok": true})
 	return jsonrpc2.NewJsonRpcSuccess(msg.ID, nil) // never use []byte{}
 }
 
@@ -24,7 +23,7 @@ func main() {
 
 	server.RegisterJsonRpcHandler("check", new(MyJsonHandler))
 	server.RegisterJsonRpcHandleFunc("checkAgain", func(msg *jsonrpc2.JsonRpcMessage) *jsonrpc2.JsonRpcMessage {
-		//result, _ := json.Marshal(map[string]interface{}{"ok": true})
+		// result, _ := json.Marshal(map[string]interface{}{"ok": true})
 		return jsonrpc2.NewJsonRpcSuccess(msg.ID, nil)
 	})
 
@@ -42,24 +41,23 @@ func main() {
 
 	du := time.Tick(10 * time.Second)
 	for {
-		select {
-		case <-du:
-			req, err := jsonrpc2http.NewClientRequest("http://127.0.0.1:8888", msg)
-			if err != nil {
-				panic(err)
-			}
-
-			res, err := client.Do(req)
-			if err != nil {
-				panic(err)
-			}
-
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				panic(err)
-			}
-
-			log.Println(string(body))
+		<-du
+		req, err := jsonrpc2http.NewClientRequest("http://127.0.0.1:8888", msg)
+		if err != nil {
+			panic(err)
 		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		log.Println(string(body))
+
 	}
 }
