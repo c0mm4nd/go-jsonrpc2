@@ -31,7 +31,7 @@ func (m *JsonRpcMessage) GetType() JsonMsgType {
 		return TypeInvalidMsg
 	}
 
-	if m.Method != "" { //Request
+	if m.Method != "" { // Request
 		if m.ID == nil {
 			return TypeNotificationMsg
 		}
@@ -40,10 +40,9 @@ func (m *JsonRpcMessage) GetType() JsonMsgType {
 	} else {
 		if m.Error != nil { // Response
 			return TypeErrorMsg
-		} else if m.Result != nil {
-			return TypeSuccessMsg
+		} else {
+			return TypeSuccessMsg // type is still success when the Result is null
 		}
-		return TypeInvalidMsg
 	}
 }
 
